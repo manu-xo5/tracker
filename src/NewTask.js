@@ -1,12 +1,9 @@
-import { ArrowBack, ArrowBackIosNew } from "@mui/icons-material";
+import { ArrowBack } from "@mui/icons-material";
 import {
   AppBar,
   Button,
   Container,
-  FormControl,
   IconButton,
-  Input,
-  InputLabel,
   Paper,
   Stack,
   TextField,
@@ -14,11 +11,11 @@ import {
   Typography,
 } from "@mui/material";
 import * as React from "react";
+import { Link, useNavigate } from "react-router-dom";
 import useLocalStorage from "./hooks/useLocalStorage";
-import { useNavigate, Link } from "react-router-dom";
 
 export default function NewTask({ ...props }) {
-  let [timeTable, setTimeTable] = useLocalStorage("TIME_TABLE");
+  let [, setTimeTable] = useLocalStorage("TIME_TABLE");
   let navigate = useNavigate();
 
   async function handleAddTask(ev) {
