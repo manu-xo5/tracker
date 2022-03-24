@@ -11,17 +11,32 @@ import {
 import * as React from "react";
 import { Link } from "react-router-dom";
 import useLocalStorage from "./hooks/useLocalStorage";
+import useSettings from "./hooks/useSettings";
 
 export default function TimeTable({ ...props }) {
   let [timeTable, setTimeTable] = useLocalStorage("TIME_TABLE");
+  let prevDelete = React.useRef(0);
+  let [settings] = useSettings();
 
   function handleDelete(task) {
-    setTimeTable(
-      /** @param {[]} prev */ (prev) => {
-        prev.splice(prev.indexOf(task), 0);
+    clearTimeout(prevDelete.current);
+
+    prevDelete.current = setTimeout(() => {
+      console.log("first");
+
+      if (!window.confirm("Sure you want to delete")) return;
+      setTimeTable((prev) => {
+        let i = prev.indexOf(task);
+        if (i === -1) return prev;
+
+        prev.splice(i, 1);
         return [...prev];
-      }
-    );
+      });
+    }, settings.holdTimeout);
+  }
+
+  function handleMouseUp() {
+    clearTimeout(prevDelete.current);
   }
 
   return (
@@ -55,7 +70,10 @@ export default function TimeTable({ ...props }) {
           >
             {timeTable.map((task) => (
               <ListItem disableGutters>
-                <ListItemButton onDoubleClick={() => handleDelete(task)}>
+                <ListItemButton
+                  onMouseDown={() => handleDelete(task)}
+                  onMouseUp={() => handleMouseUp()}
+                >
                   <ListItemText
                     sx={{
                       textTransform: "capitalize",
