@@ -1,4 +1,5 @@
 import {
+  Container,
   Dialog,
   DialogTitle,
   List,
@@ -16,7 +17,8 @@ export default function TaskHoldMenu({
   handleEdit,
 }) {
   return (
-    <Dialog onClose={handleClose} open={open}>
+    <Dialog onClose={handleClose} open={open} fullWidth>
+      <DialogTitle>Task Menu</DialogTitle>
       <List>
         <ListItemButton
           onClick={() => {

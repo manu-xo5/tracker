@@ -6,16 +6,13 @@ import * as React from "react";
  * @param {any} defaultState
  */
 export default function useLocalStorage(key, defaultState) {
-  let [state, _setState] = React.useState(
-    defaultState ||
-      (() => {
-        try {
-          return JSON.parse(localStorage.getItem(key));
-        } catch {
-          return defaultState;
-        }
-      })
-  );
+  let [state, _setState] = React.useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(key));
+    } catch {
+      return defaultState;
+    }
+  });
 
   function setState(data) {
     let serialized = data;

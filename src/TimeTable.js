@@ -2,6 +2,7 @@ import { Add } from "@mui/icons-material";
 import {
   Container,
   Dialog,
+  DialogTitle,
   IconButton,
   List,
   ListItem,
@@ -17,7 +18,7 @@ import NewTask from "./NewTask";
 import TaskHoldMenu from "./TaskHoldMenu";
 
 export default function TimeTable({ ...props }) {
-  let [timeTable, setTimeTable] = useLocalStorage("TIME_TABLE");
+  let [timeTable, setTimeTable] = useLocalStorage("TIME_TABLE", []);
   let prevHoldDur = React.useRef(0);
   let [settings] = useSettings();
   let [selectedTask, setSelectedTask] = React.useState(null);
@@ -73,6 +74,8 @@ export default function TimeTable({ ...props }) {
             <ListItemButton
               onMouseDown={() => handleOpenMenu(task)}
               onMouseUp={() => handleMouseUp()}
+              onTouchStart={() => handleOpenMenu(task)}
+              onTouchEnd={() => handleMouseUp()}
               divider
             >
               <ListItemText
