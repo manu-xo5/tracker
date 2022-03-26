@@ -14,16 +14,25 @@ import * as React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useLocalStorage from "./hooks/useLocalStorage";
 
-export default function NewTask({ ...props }) {
+export default function NewTask({ task, taskIndex, onClose }) {
   let [, setTimeTable] = useLocalStorage("TIME_TABLE");
   let navigate = useNavigate();
 
-  async function handleAddTask(ev) {
+  function handleAddTask(ev) {
     ev.preventDefault();
     let data = Object.fromEntries(new FormData(ev.currentTarget));
-    console.log(data);
-    setTimeTable((prev) => [...(prev || []), data]);
-    navigate("/");
+
+    if (task) {
+      setTimeTable((prev) => {
+        prev.splice(taskIndex, 1, data);
+        console.log(prev);
+        return [...prev];
+      });
+    } else {
+      setTimeTable((prev) => [...(prev || []), data]);
+    }
+
+    onClose?.() || navigate("/");
   }
 
   return (
@@ -35,8 +44,9 @@ export default function NewTask({ ...props }) {
               color: "white",
             }}
             size="medium"
-            component={Link}
+            component={onClose ? undefined : Link}
             to="/"
+            onClick={() => onClose?.()}
           >
             <ArrowBack fontSize="inherit" />
           </IconButton>
@@ -51,12 +61,19 @@ export default function NewTask({ ...props }) {
         <Paper sx={{ p: "1rem" }}>
           <form onSubmit={handleAddTask}>
             <Stack spacing={3}>
-              <TextField label="Title" name="title" fullWidth required />
+              <TextField
+                label="Title"
+                name="title"
+                defaultValue={task?.title}
+                fullWidth
+                required
+              />
 
               <TextField
                 type="time"
                 label="Time"
                 name="time"
+                defaultValue={task?.time}
                 InputLabelProps={{ shrink: true }}
                 fullWidth
                 required

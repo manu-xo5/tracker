@@ -1,6 +1,7 @@
 import { Add } from "@mui/icons-material";
 import {
   Container,
+  Dialog,
   IconButton,
   List,
   ListItem,
@@ -12,31 +13,41 @@ import * as React from "react";
 import { Link } from "react-router-dom";
 import useLocalStorage from "./hooks/useLocalStorage";
 import useSettings from "./hooks/useSettings";
+import NewTask from "./NewTask";
+import TaskHoldMenu from "./TaskHoldMenu";
 
 export default function TimeTable({ ...props }) {
   let [timeTable, setTimeTable] = useLocalStorage("TIME_TABLE");
-  let prevDelete = React.useRef(0);
+  let prevHoldDur = React.useRef(0);
   let [settings] = useSettings();
+  let [selectedTask, setSelectedTask] = React.useState(null);
+  let [showModal, setShowModal] = React.useState("");
 
-  function handleDelete(task) {
-    clearTimeout(prevDelete.current);
+  function handleOpenMenu(task) {
+    clearTimeout(prevHoldDur.current);
 
-    prevDelete.current = setTimeout(() => {
-      console.log("first");
-
-      if (!window.confirm("Sure you want to delete")) return;
-      setTimeTable((prev) => {
-        let i = prev.indexOf(task);
-        if (i === -1) return prev;
-
-        prev.splice(i, 1);
-        return [...prev];
-      });
+    prevHoldDur.current = setTimeout(() => {
+      setSelectedTask(task);
+      setShowModal("HOLD_MENU");
     }, settings.holdTimeout);
   }
 
+  function handleDelete(task) {
+    setTimeTable((prev) => {
+      let i = prev.indexOf(task);
+      if (i === -1) return prev;
+
+      prev.splice(i, 1);
+      return [...prev];
+    });
+  }
+
   function handleMouseUp() {
-    clearTimeout(prevDelete.current);
+    clearTimeout(prevHoldDur.current);
+  }
+
+  function handleCloseModal() {
+    setShowModal("");
   }
 
   return (
@@ -56,60 +67,69 @@ export default function TimeTable({ ...props }) {
       >
         <Add fontSize="inherit" />
       </IconButton>
-
-      <Container sx={{ pt: "4rem" }}>
-        {timeTable?.length > 0 ? (
-          <List
-            disablePadding
-            sx={{
-              "& > * + *": {
-                borderTop: ".1rem solid",
-                borderColor: "GrayText",
-              },
-            }}
-          >
-            {timeTable.map((task) => (
-              <ListItem disableGutters>
-                <ListItemButton
-                  onMouseDown={() => handleDelete(task)}
-                  onMouseUp={() => handleMouseUp()}
-                >
-                  <ListItemText
-                    sx={{
-                      textTransform: "capitalize",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                    primary={task.title || "No Title Assigned"}
-                    secondary={task.time}
-                  ></ListItemText>
-                </ListItemButton>
-              </ListItem>
-            ))}
-          </List>
-        ) : (
-          <>
-            <Typography
-              textAlign="center"
-              variant="h6"
-              fontWeight={400}
-              color="GrayText"
+      {timeTable?.length > 0 ? (
+        <List disablePadding>
+          {timeTable.map((task) => (
+            <ListItemButton
+              onMouseDown={() => handleOpenMenu(task)}
+              onMouseUp={() => handleMouseUp()}
+              divider
             >
-              No Task Yet
-            </Typography>
+              <ListItemText
+                sx={{
+                  textTransform: "capitalize",
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+                primary={task.title || "No Title Assigned"}
+                secondary={task.time}
+              ></ListItemText>
+            </ListItemButton>
+          ))}
+        </List>
+      ) : (
+        <>
+          <Typography
+            textAlign="center"
+            variant="h6"
+            fontWeight={400}
+            color="GrayText"
+          >
+            No Task Yet
+          </Typography>
 
-            <Typography textAlign="center" color="blueviolet">
-              <Link
-                to="/time-table/new-task"
-                style={{ textDecoration: "none", color: "inherit" }}
-              >
-                Add One!
-              </Link>
-            </Typography>
-          </>
-        )}
-      </Container>
+          <Typography textAlign="center" color="blueviolet">
+            <Link
+              to="/time-table/new-task"
+              style={{ textDecoration: "none", color: "inherit" }}
+            >
+              Add One!
+            </Link>
+          </Typography>
+        </>
+      )}
+
+      {/* modals */}
+      <TaskHoldMenu
+        open={showModal === "HOLD_MENU"}
+        handleClose={handleCloseModal}
+        targetTask={selectedTask}
+        handleDelete={handleDelete}
+        handleEdit={() => setShowModal("EDIT_TASK")}
+      />
+
+      <Dialog
+        fullScreen
+        open={showModal === "EDIT_TASK"}
+        onClose={handleCloseModal}
+      >
+        <NewTask
+          onClose={handleCloseModal}
+          task={selectedTask}
+          taskIndex={timeTable.indexOf(selectedTask)}
+        />
+      </Dialog>
     </>
   );
 }

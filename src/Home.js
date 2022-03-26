@@ -99,9 +99,7 @@ export default function Home({ ...props }) {
         </Container>
       </AppBar>
 
-      <Container>
-        <Typography>{props.children}</Typography>
-      </Container>
+      {props.children}
     </>
   );
 }
