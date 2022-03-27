@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import * as React from "react";
 import { Link } from "react-router-dom";
+import { APP_BAR_HEIGHT } from "./constants";
 import useLocalStorage from "./hooks/useLocalStorage";
 import useSettings from "./hooks/useSettings";
 import NewTask from "./NewTask";
@@ -51,27 +52,40 @@ export default function TimeTable({ ...props }) {
     setShowModal("");
   }
 
+  if (timeTable === null) return null;
+
   return (
     <>
       <IconButton
         size="large"
         color="primary"
         sx={(theme) => ({
+          bgcolor: "white",
           position: "fixed",
           zIndex: "1",
           bottom: "2rem",
           right: "2rem",
           boxShadow: theme.shadows[12],
+          ":hover": {
+            opacity: 1,
+            bgcolor: "rgba(255,255,255, 0.9)",
+          },
         })}
         component={Link}
         to="/time-table/new-task"
       >
         <Add fontSize="inherit" />
       </IconButton>
+
       {timeTable?.length > 0 ? (
-        <List disablePadding>
-          {timeTable.map((task) => (
+        <List
+          disablePadding
+          style={{ height: `calc(100vh - ${APP_BAR_HEIGHT})` }}
+          sx={{ overflowY: "auto" }}
+        >
+          {timeTable.map((task, i) => (
             <ListItemButton
+              key={i}
               onMouseDown={() => handleOpenMenu(task)}
               onMouseUp={() => handleMouseUp()}
               onTouchStart={() => handleOpenMenu(task)}
@@ -94,10 +108,13 @@ export default function TimeTable({ ...props }) {
       ) : (
         <>
           <Typography
-            textAlign="center"
             variant="h6"
-            fontWeight={400}
-            color="GrayText"
+            sx={{
+              textAlign: "center",
+              fontWeight: 400,
+              color: "GrayText",
+              pt: "5rem",
+            }}
           >
             No Task Yet
           </Typography>

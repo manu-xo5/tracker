@@ -8,7 +8,7 @@ import * as React from "react";
 export default function useLocalStorage(key, defaultState) {
   let [state, _setState] = React.useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(key));
+      return JSON.parse(localStorage.getItem(key)) || defaultState;
     } catch {
       return defaultState;
     }

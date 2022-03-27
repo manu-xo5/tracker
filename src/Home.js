@@ -1,4 +1,5 @@
 import * as React from "react";
+import SwipeableViews from "react-swipeable-views";
 import {
   AppBar,
   Box,
@@ -43,7 +44,7 @@ export default function Home({ ...props }) {
   }
 
   return (
-    <>
+    <div style={{ height: "100vh", overflow: "hidden" }}>
       <AppBar position="sticky" top="0">
         <Container sx={{ pt: ".5rem" }}>
           <Box
@@ -99,8 +100,8 @@ export default function Home({ ...props }) {
         </Container>
       </AppBar>
 
-      {props.children}
-    </>
+      <div>{props.children}</div>
+    </div>
   );
 }
 

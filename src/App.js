@@ -22,8 +22,10 @@ function App() {
             element={
               <>
                 <Home>
-                  Workout
-                  <img src={logo} alt="yo" />
+                  <div>
+                    Workout
+                    <img src={logo} alt="yo" />
+                  </div>
                 </Home>
               </>
             }
