@@ -1,4 +1,4 @@
-import * as React from "react";
+import * as React from 'react';
 
 /**
  * @typedef {["TIME_TABLE"]} KEY
@@ -15,14 +15,16 @@ export default function useLocalStorage(key, defaultState) {
   });
 
   function setState(data) {
-    let serialized = data;
-    if (typeof data === "function") {
-      let prev = JSON.parse(localStorage.getItem(key));
-      serialized = JSON.stringify(data(prev));
+    if (typeof data === 'function') {
+      _setState((prev) => {
+        let newData = data(prev);
+        localStorage.setItem(key, JSON.stringify(newData));
+        return newData;
+      });
+    } else {
+      localStorage.setItem(key, JSON.stringify(data));
+      _setState(data);
     }
-
-    localStorage.setItem(key, serialized);
-    _setState(data);
   }
 
   return [state, setState];
