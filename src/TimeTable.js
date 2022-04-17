@@ -1,5 +1,6 @@
-import { Add } from "@mui/icons-material";
+import { Add, Notifications, NotificationsOff } from '@mui/icons-material';
 import {
+  Box,
   Container,
   Dialog,
   DialogTitle,
@@ -7,30 +8,44 @@ import {
   List,
   ListItem,
   ListItemButton,
+  ListItemIcon,
   ListItemText,
   Typography,
-} from "@mui/material";
-import * as React from "react";
-import { Link } from "react-router-dom";
-import { APP_BAR_HEIGHT } from "./constants";
-import useLocalStorage from "./hooks/useLocalStorage";
-import useSettings from "./hooks/useSettings";
-import NewTask from "./NewTask";
-import TaskHoldMenu from "./TaskHoldMenu";
+} from '@mui/material';
+import * as React from 'react';
+import { Link } from 'react-router-dom';
+import { APP_BAR_HEIGHT } from './constants';
+import useLocalStorage from './hooks/useLocalStorage';
+import useNotification from './hooks/useNotification';
+import useSettings from './hooks/useSettings';
+import { sortDate } from './lib';
+import NewTask from './NewTask';
+import TaskHoldMenu from './TaskHoldMenu';
 
 export default function TimeTable({ ...props }) {
-  let [timeTable, setTimeTable] = useLocalStorage("TIME_TABLE", []);
+  let [_timeTable, setTimeTable] = useLocalStorage('TIME_TABLE', []);
+  let timeTable = _timeTable.sort((a, b) => sortDate(a.time, b.time));
   let prevHoldDur = React.useRef(0);
-  let [settings] = useSettings();
+  let [settings, setSettings] = useSettings();
   let [selectedTask, setSelectedTask] = React.useState(null);
-  let [showModal, setShowModal] = React.useState("");
+  let [showModal, setShowModal] = React.useState('');
+  let [notifications, { handleQueueNotification }] = useNotification(timeTable);
+
+  React.useEffect(() => {
+    if (window.Notification.permission === 'default')
+      window.Notification.requestPermission().then((status) => {
+        if (status !== settings.showNotification) {
+          setSettings((prev) => ({ ...prev, showNotification: status }));
+        }
+      });
+  }, [setSettings, settings.showNotification]);
 
   function handleOpenMenu(task) {
     clearTimeout(prevHoldDur.current);
 
     prevHoldDur.current = setTimeout(() => {
       setSelectedTask(task);
-      setShowModal("HOLD_MENU");
+      setShowModal('HOLD_MENU');
     }, settings.holdTimeout);
   }
 
@@ -49,7 +64,7 @@ export default function TimeTable({ ...props }) {
   }
 
   function handleCloseModal() {
-    setShowModal("");
+    setShowModal('');
   }
 
   if (timeTable === null) return null;
@@ -60,15 +75,15 @@ export default function TimeTable({ ...props }) {
         size="large"
         color="primary"
         sx={(theme) => ({
-          bgcolor: "white",
-          position: "fixed",
-          zIndex: "1",
-          bottom: "2rem",
-          right: "2rem",
+          bgcolor: 'white',
+          position: 'fixed',
+          zIndex: '1',
+          bottom: '2rem',
+          right: '2rem',
           boxShadow: theme.shadows[12],
-          ":hover": {
+          ':hover': {
             opacity: 1,
-            bgcolor: "rgba(255,255,255, 0.9)",
+            bgcolor: 'rgba(255,255,255, 0.9)',
           },
         })}
         component={Link}
@@ -81,49 +96,56 @@ export default function TimeTable({ ...props }) {
         <List
           disablePadding
           style={{ height: `calc(100vh - ${APP_BAR_HEIGHT})` }}
-          sx={{ overflowY: "auto" }}
+          sx={{ overflowY: 'auto' }}
         >
-          {timeTable.map((task, i) => (
-            <ListItemButton
-              key={i}
-              onMouseDown={() => handleOpenMenu(task)}
-              onMouseUp={() => handleMouseUp()}
-              onTouchStart={() => handleOpenMenu(task)}
-              onTouchEnd={() => handleMouseUp()}
-              divider
-            >
-              <ListItemText
-                sx={{
-                  textTransform: "capitalize",
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-                primary={task.title || "No Title Assigned"}
-                secondary={task.time}
-              ></ListItemText>
-            </ListItemButton>
-          ))}
+          {timeTable.map((task, i) => {
+            let isInNotification = notifications.includes(task.time);
+
+            return (
+              <ListItemButton
+                key={i}
+                onMouseDown={() => handleOpenMenu(task)}
+                onMouseUp={() => handleMouseUp()}
+                onTouchStart={() => handleOpenMenu(task)}
+                onTouchEnd={() => handleMouseUp()}
+                // onClick={() => handleQueueNotification(task.time)}
+                divider
+              >
+                <ListItemText
+                  sx={{
+                    textTransform: 'capitalize',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                  }}
+                  primary={task.title}
+                  secondary={
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                      {task.time}
+                      {isInNotification ? <Notifications /> : <NotificationsOff />}
+                    </Box>
+                  }
+                />
+              </ListItemButton>
+            );
+          })}
         </List>
       ) : (
         <>
           <Typography
             variant="h6"
             sx={{
-              textAlign: "center",
+              textAlign: 'center',
               fontWeight: 400,
-              color: "GrayText",
-              pt: "5rem",
+              color: 'GrayText',
+              pt: '5rem',
             }}
           >
             No Task Yet
           </Typography>
 
           <Typography textAlign="center" color="blueviolet">
-            <Link
-              to="/time-table/new-task"
-              style={{ textDecoration: "none", color: "inherit" }}
-            >
+            <Link to="/time-table/new-task" style={{ textDecoration: 'none', color: 'inherit' }}>
               Add One!
             </Link>
           </Typography>
@@ -132,18 +154,14 @@ export default function TimeTable({ ...props }) {
 
       {/* modals */}
       <TaskHoldMenu
-        open={showModal === "HOLD_MENU"}
+        open={showModal === 'HOLD_MENU'}
         handleClose={handleCloseModal}
         targetTask={selectedTask}
         handleDelete={handleDelete}
-        handleEdit={() => setShowModal("EDIT_TASK")}
+        handleEdit={() => setShowModal('EDIT_TASK')}
       />
 
-      <Dialog
-        fullScreen
-        open={showModal === "EDIT_TASK"}
-        onClose={handleCloseModal}
-      >
+      <Dialog fullScreen open={showModal === 'EDIT_TASK'} onClose={handleCloseModal}>
         <NewTask
           onClose={handleCloseModal}
           task={selectedTask}
